@@ -84,3 +84,29 @@ export function Router() {
   )
 }
 ```
+
+### Reaproveitando estilização de componentes no styled-components
+
+```js
+const BaseInput = styled.input``
+
+export const TaskInput = styled(BaseInput)``
+```
+
+### Tipando elemento através da chave de outro elemento
+
+```js
+const STATUS_COLOR = {
+  green: 'green-500',
+  yellow: 'yellow-500',
+  red: 'red-500'
+} as const //Indicando que os valores não são uma simples string
+
+interface TaskStatusProps {
+  statusColor: keyof typeof STATUS_COLOR
+}
+
+export const TaskStatus = styled.span<TaskStatusProps>`
+  background: ${({ theme, statusColor }) => theme[STATUS_COLOR[statusColor]]};
+`
+```
