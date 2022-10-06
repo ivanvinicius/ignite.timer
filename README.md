@@ -110,3 +110,25 @@ export const TaskStatus = styled.span<TaskStatusProps>`
   background: ${({ theme, statusColor }) => theme[STATUS_COLOR[statusColor]]};
 `
 ```
+
+### Inferência de tipos de um formulário através do ZOD
+
+```js
+const newCycleSchemaValidation = zod.object({
+  task: zod.string().min(1)    
+})
+
+type NewCycleFormData = zod.infer<typeof newCycleSchemaValidation>
+
+const { handleSubmit } = useForm<NewCycleFormData>({
+  resolver: zodResolver(newCycleSchemaValidation),
+  defaultValues: {
+    task: '',
+    minutesAmount: 0
+  }
+})
+
+function handleCreateNewCycle(data: NewCycleFormData) {
+  console.log(data)
+}
+```
