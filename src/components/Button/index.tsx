@@ -1,9 +1,9 @@
-import { Container, ButtonVariant } from "./styles";
+import { Container, ButtonVariant } from './styles'
 
 interface Props {
-  variant?: ButtonVariant;
+  variant?: ButtonVariant
 }
 
-export function Button({ variant = "primary" }: Props) {
-  return <Container variant={variant}>Enviar</Container>;
+export function Button({ variant = 'primary' }: Props) {
+  return <Container variant={variant}>Enviar</Container>
 }
