@@ -16,6 +16,7 @@ interface Cycles {
 }
 
 interface CyclesContextData {
+  cycles: Cycles[]
   activeCycle: Cycles | undefined
   activeCycleID: string | null
   amountSecondsPassed: number
@@ -49,7 +50,6 @@ export function CyclesContextProvider({ children }: Props) {
       setCycles((state) => [...state, newCycle])
       setActiveCycleID(newCycle.id)
       setAmountSecondsPassed(0)
-      // reset()
     },
     []
   )
@@ -92,6 +92,7 @@ export function CyclesContextProvider({ children }: Props) {
   return (
     <CyclesContext.Provider
       value={{
+        cycles,
         activeCycle,
         activeCycleID,
         amountSecondsPassed,

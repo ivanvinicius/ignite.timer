@@ -1,6 +1,15 @@
+import { formatDistanceToNow } from 'date-fns'
+import ptBR from 'date-fns/locale/pt-BR'
+
+import { useCyclesContext } from '../../contexts/CyclesContext'
+
 import { HistoryContainer, HistoryList, TaskStatus } from './styles'
 
 export function History() {
+  const { cycles } = useCyclesContext()
+
+  console.log(cycles)
+
   return (
     <HistoryContainer>
       <h1>Meu histórico</h1>
@@ -16,30 +25,38 @@ export function History() {
             </tr>
           </thead>
           <tbody>
-            <tr>
-              <td>Projeto cruze 2025</td>
-              <td>20 minutos</td>
-              <td>Há cerca de 2 meses</td>
-              <td>
-                <TaskStatus statusColor="yellow">Pendente</TaskStatus>
-              </td>
-            </tr>
-            <tr>
-              <td>Venda da souza cruz</td>
-              <td>15 minutos</td>
-              <td>Há cerca de 3 meses</td>
-              <td>
-                <TaskStatus statusColor="red">Cancelado</TaskStatus>
-              </td>
-            </tr>
-            <tr>
-              <td>Aquisição da BAT tabacos</td>
-              <td>55 minutos</td>
-              <td>Há cerca de 1 meses</td>
-              <td>
-                <TaskStatus statusColor="green">Concluído</TaskStatus>
-              </td>
-            </tr>
+            {cycles.map(
+              ({
+                id,
+                task,
+                minutesAmount,
+                startDate,
+                finishedDate,
+                interruptedDate
+              }) => (
+                <tr key={id}>
+                  <td>{task}</td>
+                  <td>{minutesAmount} minutos</td>
+                  <td>
+                    {formatDistanceToNow(startDate, {
+                      locale: ptBR,
+                      addSuffix: true
+                    })}
+                  </td>
+                  <td>
+                    {finishedDate && (
+                      <TaskStatus statusColor="green">Concluído</TaskStatus>
+                    )}
+                    {interruptedDate && (
+                      <TaskStatus statusColor="red">Interrompido</TaskStatus>
+                    )}
+                    {!finishedDate && !interruptedDate && (
+                      <TaskStatus statusColor="yellow">Em andamento</TaskStatus>
+                    )}
+                  </td>
+                </tr>
+              )
+            )}
           </tbody>
         </table>
       </HistoryList>
