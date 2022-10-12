@@ -1,5 +1,12 @@
-import { createContext, useContext, useState, useReducer } from 'react'
+import {
+  createContext,
+  useContext,
+  useState,
+  useReducer,
+  useEffect
+} from 'react'
 import { v4 as uuidv4 } from 'uuid'
+import { differenceInSeconds } from 'date-fns'
 
 import { cyclesReducer, Cycle } from '../reducers/cycles/reducers'
 import {
@@ -28,16 +35,29 @@ interface Props {
   children: React.ReactNode
 }
 
+const localStorageKey = '@ignite-timer:cycles-state:v1.0'
 const CyclesContext = createContext({} as CyclesContextData)
 
 export function CyclesContextProvider({ children }: Props) {
-  const [cyclesState, dispatch] = useReducer(cyclesReducer, {
-    cycles: [],
-    activeCycleID: null
-  })
+  const [cyclesState, dispatch] = useReducer(
+    cyclesReducer,
+    {
+      cycles: [],
+      activeCycleID: null
+    },
+    loadDataFromLocalStorage
+  )
+
   const { cycles, activeCycleID } = cyclesState
-  const [amountSecondsPassed, setAmountSecondsPassed] = useState(0)
   const activeCycle = cycles.find((cycle) => cycle.id === activeCycleID)
+  const [amountSecondsPassed, setAmountSecondsPassed] = useState(() => {
+    // Para corrigir o delay do timer ao dar F5 na página
+    if (activeCycle) {
+      return differenceInSeconds(new Date(), new Date(activeCycle.startDate))
+    }
+
+    return 0
+  })
 
   function setSecondsPassed(seconds: number) {
     setAmountSecondsPassed(seconds)
@@ -62,6 +82,20 @@ export function CyclesContextProvider({ children }: Props) {
   function markCurrentCycleAsFinished() {
     dispatch(markCurrentCycleAsFinishedAction())
   }
+
+  function loadDataFromLocalStorage() {
+    const storedStateAsJSON = localStorage.getItem(localStorageKey)
+
+    if (storedStateAsJSON) {
+      return JSON.parse(storedStateAsJSON)
+    }
+  }
+
+  useEffect(() => {
+    const stateJSON = JSON.stringify(cyclesState)
+
+    localStorage.setItem(localStorageKey, stateJSON)
+  }, [cyclesState])
 
   return (
     <CyclesContext.Provider

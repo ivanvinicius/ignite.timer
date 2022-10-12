@@ -8,8 +8,6 @@ import { HistoryContainer, HistoryList, TaskStatus } from './styles'
 export function History() {
   const { cycles } = useCyclesContext()
 
-  console.log(cycles)
-
   return (
     <HistoryContainer>
       <h1>Meu histórico</h1>
@@ -38,7 +36,7 @@ export function History() {
                   <td>{task}</td>
                   <td>{minutesAmount} minutos</td>
                   <td>
-                    {formatDistanceToNow(startDate, {
+                    {formatDistanceToNow(new Date(startDate), {
                       locale: ptBR,
                       addSuffix: true
                     })}
