@@ -1,4 +1,10 @@
-import { createContext, useCallback, useContext, useState } from 'react'
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useState,
+  useReducer
+} from 'react'
 import { v4 as uuidv4 } from 'uuid'
 
 interface CreateCycleData {
@@ -6,7 +12,7 @@ interface CreateCycleData {
   minutesAmount: number
 }
 
-interface Cycles {
+interface Cycle {
   id: string
   task: string
   minutesAmount: number
@@ -16,14 +22,19 @@ interface Cycles {
 }
 
 interface CyclesContextData {
-  cycles: Cycles[]
-  activeCycle: Cycles | undefined
+  cycles: Cycle[]
+  activeCycle: Cycle | undefined
   activeCycleID: string | null
   amountSecondsPassed: number
   setSecondsPassed: (seconds: number) => void
   createNewCycle: (data: CreateCycleData) => void
   interruptCurrentCycle: () => void
   markAsFinishedCycle: () => void
+}
+
+interface CycleStateReducer {
+  cycles: Cycle[]
+  activeCycleID: string | null
 }
 
 interface Props {
@@ -33,56 +44,94 @@ interface Props {
 const CyclesContext = createContext({} as CyclesContextData)
 
 export function CyclesContextProvider({ children }: Props) {
-  const [cycles, setCycles] = useState<Cycles[]>([])
+  const [cyclesState, dispatch] = useReducer(
+    (state: CycleStateReducer, action: any) => {
+      switch (action.type) {
+        case 'ADD_NEW_CYCLE':
+          return {
+            cycles: [...state.cycles, action.payload.newCycle],
+            activeCycleID: action.payload.newCycle.id
+          }
+
+        case 'INTERRUPT_CURRENT_CYCLE':
+          return {
+            cycles: state.cycles.map((currentCycle) => {
+              if (currentCycle.id === state.activeCycleID) {
+                return {
+                  ...currentCycle,
+                  interruptedDate: new Date()
+                }
+              } else {
+                return currentCycle
+              }
+            }),
+            activeCycleID: null
+          }
+
+        case 'MARK_CURRENT_CYCLE_AS_FINISHED':
+          return {
+            cycles: state.cycles.map((currentCycle) => {
+              if (currentCycle.id === state.activeCycleID) {
+                return {
+                  ...currentCycle,
+                  finishedDate: new Date()
+                }
+              } else {
+                return currentCycle
+              }
+            }),
+            activeCycleID: null
+          }
+
+        default:
+          return state
+      }
+    },
+    {
+      cycles: [],
+      activeCycleID: null
+    }
+  )
+
+  const { cycles, activeCycleID } = cyclesState
   const [amountSecondsPassed, setAmountSecondsPassed] = useState(0)
-  const [activeCycleID, setActiveCycleID] = useState<string | null>(null)
   const activeCycle = cycles.find((cycle) => cycle.id === activeCycleID)
 
   const createNewCycle = useCallback(
     ({ task, minutesAmount }: CreateCycleData) => {
-      const newCycle: Cycles = {
-        id: uuidv4(),
-        task,
-        minutesAmount,
-        startDate: new Date()
-      }
-
-      setCycles((state) => [...state, newCycle])
-      setActiveCycleID(newCycle.id)
       setAmountSecondsPassed(0)
+
+      dispatch({
+        type: 'ADD_NEW_CYCLE',
+        payload: {
+          newCycle: {
+            id: uuidv4(),
+            task,
+            minutesAmount,
+            startDate: new Date()
+          }
+        }
+      })
     },
     []
   )
 
   const interruptCurrentCycle = useCallback(() => {
-    setCycles((state) =>
-      state.map((cycle) => {
-        if (cycle.id === activeCycleID) {
-          return {
-            ...cycle,
-            interruptedDate: new Date()
-          }
-        } else {
-          return cycle
-        }
-      })
-    )
-    setActiveCycleID(null)
+    dispatch({
+      type: 'INTERRUPT_CURRENT_CYCLE',
+      payload: {
+        activeCycleID
+      }
+    })
   }, [activeCycleID])
 
   const markAsFinishedCycle = useCallback(() => {
-    setCycles((state) =>
-      state.map((cycle) => {
-        if (cycle.id === activeCycleID) {
-          return {
-            ...cycle,
-            finishedDate: new Date()
-          }
-        } else {
-          return cycle
-        }
-      })
-    )
+    dispatch({
+      type: 'MARK_CURRENT_CYCLE_AS_FINISHED',
+      payload: {
+        activeCycleID
+      }
+    })
   }, [activeCycleID])
 
   const setSecondsPassed = useCallback((seconds: number) => {
