@@ -1,39 +1,62 @@
-## Conhecimentos adquiridos nas aulas
+<div id="top" align="center">
+  <div>
+    <img src="github/images/logo.jpg" alt="Logo" width="200" height="100">
+  </div>
+  <h4 align="center">Ignite Timer - Countdown timer built in React.</h4>
+</div>
 
-### Eslint da Rocketseat
+## Resumo
 
-OBS: Caso o prettier estaja configurado no VSCode é necessário criar o arquivo
-`prettier.config.cjs`:
-```js
-module.exports = {
-  semi: false,
-  singleQuote: true,
-  arrowParens: 'always',
-  trailingComma: 'none',
-  endOfLine: 'auto',
-}
-```
+<ol>
+  <li><a href="#visão-geral-do-projeto">Visão geral do projeto</a></li>
+  <li><a href="#tecnologias-utilizadas">Tecnologias utilizadas</a></li>
+  <li><a href="#instalação-e-utilização">Instalação e utilização</a></li>
+  <li><a href="#conhecimentos-aplicados">Conhecimentos aplicados</a></li>
+</ol>
 
-OBS: Para corrigir código ao salvar, nas configurações do VScode habilitar:
-```js
- "editor.codeActionsOnSave": {
-    "source.fixAll.eslint": true
-},
-```
+## Visão geral do projeto
 
-1 - Instalar pacote ```cmd yarn add eslint @rocketseat/eslint-config -D```
+<div align="center">
+  <img src="github/images/preview.png" alt="project preview" width="816" height="525">  
+</div>
+<div align="center">
+  <h3>
+    <a target="_blank" href="https://ignite-countdown-timer.netlify.app/">Ver projeto no Netlify</a>
+  </h3>
+</div>
 
-2 - Criar arquivo `.eslintrc.json` e extender configurações do pacote:
-```js
-{
-  "extends": "@rocketseat/eslint-config/react"
-}
-```
+</br>
 
-3 - Comando que procura erros, para fazer o lint automático basta adicionar `--fix`
-```cmd
-yarn eslint src --ext .ts,.tsx
-```
+## Tecnologias utilizadas
+
+- [ViteJS](https://vitejs.dev/)
+- [ReactJS](https://reactjs.org/)
+- [React Hook Form](https://react-hook-form.com/)
+- [Yup](https://www.npmjs.com/package/yup)
+- [Netlify](https://app.netlify.com/)
+- [Date-fns](https://date-fns.org/)
+- [Uuid](https://www.uuidgenerator.net/version4)
+- [Zod](https://www.npmjs.com/package/zod)
+- [Styled Components](https://styled-components.com/)
+- [Immer](https://styled-components.com/)
+- [Phospor React](https://www.npmjs.com/package/phosphor-react)
+- [React Router Dom](https://www.npmjs.com/package/react-router-dom)
+
+## Instalação e utilização
+
+### Pré-requisitos
+
+Instalações necessárias
+
+1. NodeJS
+2. Yarn
+
+### Instalação
+
+1. Baixe as depedências do projeto com o comando `$ yarn`.
+2. Rode o projeto com o comando `$ yarn dev`. -> localhost:5173
+
+## Conhecimentos aplicados
 
 ### Utilizando Layouts do React Router DOM
 
@@ -132,3 +155,148 @@ function handleCreateNewCycle(data: NewCycleFormData) {
   console.log(data)
 }
 ```
+
+### Versionando LocalStorage
+
+A prática de versionar o localStorage é usada para evitar bugs futuros na aplicação. 
+Imagine que atualmente os dados são salvos de uma forma e, futuramente esse formato 
+é alterado. Ao tentar ler os dados que já estavam no localStorage do usuário a aplicação vai bugar.
+
+```js
+const localStorageKey = '@ignite-timer:cycles-state:v1.0'
+```
+
+### Utilizando contextos do React
+
+Utilizar contextos no React permite com que posssamos acessar valores de uma forma 
+global entre todas as rotas da nossa aplicação.Para isso precisamos criar um provider 
+no nível mais alto do nosso app, encapsulando todo o resto.
+
+```js
+  <CyclesContextProvider>
+    <Rotas />
+  </CyclesContextProvider>
+```
+
+Agora dentro da rota desejada basta chamar o método useCyclesContext para ter 
+acesso a todos os valores enviados pelo provider.
+
+### Utilizando Reducers no React
+
+useReducers são utilizados para armazenar estado, como o hook useState. A principal 
+diferenca entre os dois, é que os reducers tem a capacidade de armarzer uma estrutura de 
+dados mais complexa de maneira mais fácil. O retorno da função useReducer é o estado 
+e um método dispatch, usado para disparar uma action. O useReducer também espera 
+receber três parâmetros. O primeiro deles é a própria função que vai tratar as 
+actions recebidas do dispatch e alterar o estado; O segudo parâmetro são os valores 
+inciais; Já o terceiro parâmetro é uma função responsável por carregar dados de fontes
+externas como o localStorage, sendo esse parâmetro, opcional.
+
+```js
+ const [cyclesState, dispatch] = useReducer(
+    cyclesReducer,
+    {
+      cycles: [],
+      activeCycleID: null
+    },
+    //nunca pode retornar valor undefined
+    loadDataFromLocalStorage
+  )
+```
+
+### Separando Actions e Reducers utilizando pattern
+
+Para padronizar as nomenclaturas das Actions, pode ser criado um ENUM exportando-o 
+para os arquivos que vão utiliza-lo.
+
+```js
+export enum ActionTypes {
+  ADD_NEW_CYCLE = 'ADD_NEW_CYCLE', 
+}
+```
+
+Para padrozinar os argumentos enviados através do dispatch, podem ser criadas 
+funções, que esperam esses argumentos de forma padronizada e, retornam uma action para o dispatch.
+
+```js
+export function addNewCycleAction(newCycle: Cycle) {
+  return {
+    type: ActionTypes.ADD_NEW_CYCLE,
+    payload: {
+      newCycle
+    }
+  }
+}
+
+//utilizando método no dispatch
+ function createNewCycle({ task, minutesAmount }: CreateCycleData) {
+    const newCycle = {
+      id: uuidv4(),
+      task,
+      minutesAmount,
+      startDate: new Date()
+    }
+
+    dispatch(addNewCycleAction(newCycle))
+  }
+```
+
+Para separar e padronizar as actions que manipulam o estado dentro do reducer, 
+pode ser criado um arquivo separado seguindo o padão abaixo:
+
+```js 
+export function cyclesReducer(state: CycleStateReducer, action: any) {
+  switch (action.type) {
+    case ActionTypes.ADD_NEW_CYCLE:
+      return produce(state, (draft) => {
+        draft.cycles.push(action.payload.newCycle)
+        draft.activeCycleID = action.payload.newCycle.id
+      })
+    default:
+      return state
+  }
+```
+
+### Immer para manipulações complexas de estado
+
+Obecendo o conceito de imutabilidade do React, algumas operações podem se tornar
+confusas, pensando nisso podemos instalar o Immer em nossa aplicação. O Immer 
+cria um rascunho do estado onde podemos manipular os dados da forma convêncional, 
+depois ele repassa esses dados do rascunho para o estado obedecendo as regras de 
+imutabilidade.
+
+```js 
+//com immer
+case ActionTypes.INTERRUPT_CURRENT_CYCLE: {
+  const currentCycleIndex = state.cycles.findIndex(
+    (cycle) => cycle.id === state.activeCycleID
+  )
+
+  if (currentCycleIndex < 0) return state
+
+  return produce(state, (draft) => {
+    draft.cycles[currentCycleIndex].interruptedDate = new Date()
+    draft.activeCycleID = null
+  })
+}
+
+//sem immer
+ case 'INTERRUPT_CURRENT_CYCLE':
+  return {
+    cycles: state.cycles.map((currentCycle) => {
+      if (currentCycle.id === state.activeCycleID) {
+        return {
+          ...currentCycle,
+          interruptedDate: new Date()
+        }
+      } else {
+        return currentCycle
+      }
+    }),
+    activeCycleID: null
+  }
+```
+
+</br>
+
+<h4 align="center"><a href="#top">Voltar ao Início</a></h4>
